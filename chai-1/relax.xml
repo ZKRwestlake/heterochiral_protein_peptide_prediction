@@ -1,0 +1,54 @@
+ <ROSETTASCRIPTS>
+
+	<SCOREFXNS>
+		<ScoreFunction name="sfxn" weights="beta_nov16_cart" >
+            <Reweight scoretype="arg_cation_pi" weight="3" />
+            <Reweight scoretype="approximate_buried_unsat_penalty" weight="5" />
+            <Set approximate_buried_unsat_penalty_burial_atomic_depth="3.5" />
+            <Set approximate_buried_unsat_penalty_hbond_energy_threshold="-0.5" />
+        </ScoreFunction>
+		
+	</SCOREFXNS>
+
+	<RESIDUE_SELECTORS>
+		<Chain name="chainB" chains="%%chain_grp2_ids%%"/>
+		<Not name="chainA" selector="chainB" />
+		
+		<InterfaceByVector name="interface_AB" cb_dist_cut="11" nearby_atom_cut="5.5" vector_angle_cut="75" 
+		vector_dist_cut="9" grp1_selector="chainA" grp2_selector="chainB"/>
+		<Not name="not_interface" selector="interface_AB" />
+	</RESIDUE_SELECTORS>
+
+	<TASKOPERATIONS>
+		<OperateOnResidueSubset name="prevent_non_interface" selector="not_interface" >
+            <RestrictToRepackingRLT/>
+        </OperateOnResidueSubset>
+	</TASKOPERATIONS>
+		
+	<FILTERS>
+		<ContactMolecularSurface name="contact_molecular_surface" distance_weight="0.5" target_selector="chainA" binder_selector="chainB" confidence="0" />
+		<Ddg name="ddg" threshold="0" chain_num="%%chain_grp2_ids%%" repack="0" confidence="0" scorefxn="sfxn" />
+	</FILTERS>
+    
+	<MOVERS>
+		
+	<FastRelax name="fastrelax" scorefxn="sfxn" repeats="3" task_operations="prevent_non_interface" cartesian="true" 
+		ramp_down_constraints="false" bondangle="true" bondlength="true" min_type="dfpmin_armijo_nonmonotone" >
+      <MoveMap name="mm" bb="1" chi="1" jump="1">
+		Jump number="1" setting="True" />
+		</MoveMap>
+      </FastRelax>
+
+	</MOVERS>
+	
+
+	<PROTOCOLS>
+		<Add mover_name="fastrelax" />
+		<Add filter_name="contact_molecular_surface" />
+		<Add filter_name="ddg" />
+		
+	</PROTOCOLS>
+
+<OUTPUT scorefxn="sfxn" />
+
+</ROSETTASCRIPTS>
