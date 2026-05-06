@@ -10,7 +10,7 @@
 ##SBATCH --mem 1g
 
 . ~/.bashrc
-
+conda activate CHAI_ENV
 dir=`sed -n ${SLURM_ARRAY_TASK_ID}p dirs.list`
 
 python predict.py $dir

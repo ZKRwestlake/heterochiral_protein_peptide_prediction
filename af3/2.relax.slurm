@@ -10,8 +10,8 @@
 # set -e
 . ~/.bashrc
 
-sample_dir=`sed -n ${SLURM_ARRAY_TASK_ID}p outputs.list`
-dir=$(dirname $(dirname $sample_dir))
+af_dir=`sed -n ${SLURM_ARRAY_TASK_ID}p outputs.list`
+dir=$(dirname $af_dir)
 xml=$PWD/relax.xml
 convert=$PWD/convert.py
 
@@ -31,10 +31,6 @@ for i in `seq $start $n_seqs`;do
 done
 
 name=`basename $dir`
-seed=`basename $sample_dir`
-
-for i in `seq 0 4`;do
-af_dir=af_output/$name/seed-${seed}_sample-$i
 
 if [ -d $af_dir ];then
 cd $af_dir
@@ -62,6 +58,5 @@ $rosettabin/rosetta_scripts$rosettasuffix \
  2>err.log
 
 fi
-cd -
+
 fi
-done
