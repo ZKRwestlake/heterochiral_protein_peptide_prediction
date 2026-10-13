@@ -1,0 +1,9 @@
+-jd2::failed_job_exception 0
+-in:file:silent_struct_type binary
+#-in:file:silent in.silent
+-out:file:silent_struct_type binary
+-out:file:silent out.silent
+-beta_nov16
+#-dont_reinitialize_mover
+-mute protocols.rosetta_scripts.ParsedProtocol.REPORT
+-overwrite 1

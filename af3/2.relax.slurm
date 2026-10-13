@@ -9,6 +9,9 @@
 
 # set -e
 . ~/.bashrc
+# CIF -> PDB conversion (convert.py) needs biopython.
+conda activate CHAI_ENV
+export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
 af_dir=`sed -n ${SLURM_ARRAY_TASK_ID}p outputs.list`
 dir=$(dirname $af_dir)

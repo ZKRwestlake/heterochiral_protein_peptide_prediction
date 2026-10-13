@@ -1,0 +1,14 @@
+-beta_nov16
+-out:file:score_only score.sc
+-in:file:silent_struct_type binary
+#-in:file:silent in.silent 
+#-out:file:silent_struct_type binary
+#-out:file:silent out.silent
+#-skip_filter_reports # in builds not built by Brian, this is -mute protocols.rosetta_scripts.ParsedProtocol.REPORT
+-mute protocols.rosetta_scripts.ParsedProtocol.REPORT
+-dunbrack_prob_buried 0.8
+-dunbrack_prob_nonburied 0.8
+-dunbrack_prob_buried_semi 0.8
+-dunbrack_prob_nonburied_semi 0.8
+-script_vars patchdock_res=73,72,69,66,65,63,62,59,58,55,54,53,39,36,35,33,32
+-overwrite

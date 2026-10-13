@@ -1,0 +1,23 @@
+## Source patch used to derive the standalone polymeric D0C.params file.
+## Apply to Rosetta's built-in D-phenylalanine (DPHE/DPH), replace para HZ
+## with chlorine, and expose the PDB/mmCIF code D0C.
+
+NAME para_chloro
+
+BEGIN_SELECTOR
+PROPERTY PROTEIN
+PROPERTY D_AA
+NAME3 DPH
+HAS_ATOMS CZ HZ
+END_SELECTOR
+
+BEGIN_CASE
+SET_IO_STRING D0C X
+SET_INTERCHANGEABILITY_GROUP D0C
+ADD_ATOM  CL  Cl   X    -0.090
+ADD_BOND  CZ  CL
+DELETE_ATOM  HZ
+SET_ICOOR  CL  179.911728  59.918243  1.740  CZ  CE1  CE2
+DELETE_PROPERTY CANONICAL_AA
+DELETE_PROPERTY CANONICAL_NUCLEIC
+END_CASE

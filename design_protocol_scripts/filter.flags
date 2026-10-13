@@ -1,0 +1,7 @@
+-beta_nov16
+-in:file:silent_struct_type binary
+#-in:file:silent in.silent
+-out:file:score_only out.sc
+-holes:dalphaball rosetta/main/source/external/DAlpahBall/DAlphaBall.gcc
+-script_vars patchdock_res=1,2,5,6,8,9,12,13,16
+-overwrite

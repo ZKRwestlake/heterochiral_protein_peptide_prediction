@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/bash
 #SBATCH -p cpu
 #SBATCH -J relax
 #SBATCH -o relax.log
@@ -13,6 +13,34 @@
 sample_dir=`sed -n ${SLURM_ARRAY_TASK_ID}p outputs.list`
 dir=$(dirname $(dirname $sample_dir))
 xml=$PWD/relax.xml
+
+# D0C is optional. Resolve its project-local chemistry files before changing
+# into the sample directory, but load them only for inputs that contain D0C.
+d0c_param_flags=()
+if awk '
+    ($1 == "ATOM" || $1 == "HETATM") && $6 == "D0C" { found=1; exit }
+    END { exit !found }
+' "$sample_dir"/pred.model_idx_*.cif; then
+    d0c_params=$PWD/rosetta_params/D0C.params
+    d0c_bonded_params=$PWD/rosetta_params/bondlength_bondangle_d0c
+    rosetta_database=$ROSETTAROOT/main/database
+
+    for required_file in \
+        "$d0c_params" \
+        "$d0c_bonded_params/default-improper.txt" \
+        "$rosetta_database/chemical/residue_type_sets/fa_standard/residue_types.txt"; do
+        if [ ! -r "$required_file" ]; then
+            echo "Required D0C Rosetta input is missing or unreadable: $required_file" >&2
+            exit 1
+        fi
+    done
+
+    d0c_param_flags=(
+        -extra_res_fa "$d0c_params"
+        -in:path:database "$PWD/rosetta_params" "$rosetta_database"
+        -score:bonded_params_dir bondlength_bondangle_d0c
+    )
+fi
 
 # check if D-chains come at the front or the end
 n_seqs=`cat $dir/example.fasta| grep '>'| wc -l`
@@ -47,6 +75,7 @@ $rosettabin/rosetta_scripts$rosettasuffix \
  -out:prefix ${prefix}_ \
  -overwrite \
  -beta \
+ "${d0c_param_flags[@]}" \
  >/dev/null \
  2>err.log
 # -out:path:all relax \

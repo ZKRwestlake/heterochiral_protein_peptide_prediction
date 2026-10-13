@@ -1,0 +1,14 @@
+--- database/scoring/score_functions/bondlength_bondangle/default-improper.txt
++++ rosetta_params/bondlength_bondangle_d0c/default-improper.txt
+@@
+ PHE CD1 CE1 CZ HZ 3.141592654 34.552 1
++PHE CD1 CE1 CZ CL 3.141592654 34.552 1
+@@
+ PHE CD2 CE2 CZ HZ -3.141592654 34.552 1
++PHE CD2 CE2 CZ CL -3.141592654 34.552 1
+@@
+ PHE HE1 CE1 CZ HZ 0 34.552 1
++PHE HE1 CE1 CZ CL 0 34.552 1
+@@
+ PHE HE2 CE2 CZ HZ 0 34.552 1
++PHE HE2 CE2 CZ CL 0 34.552 1

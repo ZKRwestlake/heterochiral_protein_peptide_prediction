@@ -1,0 +1,164 @@
+<ROSETTASCRIPTS>
+    <SCOREFXNS>
+        <ScoreFunction name="sfxn" weights="beta_nov16" />
+ 
+    </SCOREFXNS>
+    <RESIDUE_SELECTORS>
+        <Chain name="peptide" chains="A"/>
+        <Chain name="target" chains="B"/>
+        <Index name="patchdock_res" resnums="%%patchdock_res%%" reverse="true"/>
+        Index name="interface_res" resnums="%%interface_res%%" reverse="true"/>
+        Index name="N_Glyc_res" resnums="%%glyc_res%%" reverse="true"/>
+        ### select interface of chainB close within 8.0 A of chainA
+        <Neighborhood name="interface_chB" selector="peptide" distance="8.0"/>
+        ### select interface of chainA close within 8.0 A of chainB
+        <Neighborhood name="interface_chA" selector="target" distance="8.0"/>
+        ### select intersection of chain A and Chain B interface
+        <And name="AB_interface" selectors="interface_chB,interface_chA"/>
+        ### selects interface residues that are just chain A
+        <And name="binding_site" selectors="AB_interface,target"/>
+    </RESIDUE_SELECTORS>
+    <MOVERS>
+        <SwitchChainOrder name="chain1onlypre" chain_order="1" />
+        <ScoreMover name="scorepose" scorefxn="sfxn" verbose="false" />
+        <ParsedProtocol name="chain1only">
+            <Add mover="chain1onlypre" />
+            <Add mover="scorepose" />
+        </ParsedProtocol>
+        #target_only
+        <SwitchChainOrder name="target_only" chain_order="2"/>
+    </MOVERS>
+    
+    <TASKOPERATIONS>
+        <OperateOnResidueSubset name="restrict_to_interface" selector="AB_interface">
+            <RestrictToRepackingRLT/>
+        </OperateOnResidueSubset>
+    </TASKOPERATIONS>
+    <FILTERS>
+        ### Computes the sasa specifically in the interface: total, hydrophobic, and polar
+        <Sasa name="interface_buried_sasa" confidence="0"/>
+        <Sasa name="interface_hydrophobic_sasa" confidence="0" hydrophobic="True"/>
+        <Sasa name="interface_polar_sasa" confidence="0" polar="True"/>
+
+        <ContactMolecularSurface name="contact_patch_sq3" distance_weight="0.5" target_selector="patchdock_res" binder_selector="peptide" confidence="0" near_squared_size="3" />
+        <ContactMolecularSurface name="contact_patch_sq5" distance_weight="0.5" target_selector="patchdock_res" binder_selector="peptide" confidence="0" near_squared_size="5" />
+        <ContactMolecularSurface name="contact_patch_sq7" distance_weight="0.5" target_selector="patchdock_res" binder_selector="peptide" confidence="0" near_squared_size="7" />
+
+        <ContactMolecularSurface name="contact_molec_sq3" distance_weight="0.5" target_selector="target" binder_selector="peptide" confidence="0" near_squared_size="3" />
+        <ContactMolecularSurface name="contact_molec_sq5" distance_weight="0.5" target_selector="target" binder_selector="peptide" confidence="0" near_squared_size="5" />
+        <ContactMolecularSurface name="contact_molec_sq7" distance_weight="0.5" target_selector="target" binder_selector="peptide" confidence="0" near_squared_size="7" />
+
+        ContactMolecularSurface name="contact_patch_glyc" distance_weight="0.5" target_selector="N_Glyc_res" binder_selector="peptide" confidence="0"  />
+        ContactMolecularSurface name="contact_patch_interface" distance_weight="0.5" target_selector="interface_res" binder_selector="peptide" confidence="0"  />
+            
+        # Exposed Hydrophobics target
+        <TotalSasa name="exposed_hydrophobics_complex" confidence="0" hydrophobic="True" />
+        <MoveBeforeFilter
+            name="exposed_np_target"
+            mover="target_only"
+            filter="exposed_hydrophobics_complex" />
+        
+        # The new contact moleuclar surface from Longxing
+        <ContactMolecularSurface
+          name="contact_MS"
+          min_interface="0"
+          distance_weight="1.0"
+          verbose="1"
+          target_selector="binding_site"
+          binder_selector="peptide"
+          confidence="0" />
+        
+        ### ddG w/ and w/o repack/min ref score function
+        <Ddg
+          name="ddg"
+          repack="1"
+          threshold="-16" jump="1" repeats="5" confidence="1" scorefxn="sfxn"/>
+        <Ddg
+          name="ddg_norepack"
+          repack="0"
+          threshold="-21" jump="1" repeats="1" confidence="1" scorefxn="sfxn"/>
+        
+        ### difference of total exposed hydrophobics (np) of chain 2 and the hydrophobics of chain 1 at the interface (approximate since assuming that the hydrophobics at the interface are qually contributed by chain 1 and chain 2)
+        <CalculatorFilter
+            name="np_target_exposed_approx"
+            equation="np - (sasa / 2)"
+            threshold="1"
+            confidence="0">
+          <VAR name="sasa" filter="interface_hydrophobic_sasa"/>
+          <VAR name="np" filter="exposed_np_target"/>
+        </CalculatorFilter>
+          
+        ### normal interface atomic contact count
+        <AtomicContactCount
+          name="interface_contactcount"
+          task_operations="restrict_to_interface"
+          confidence="0"/>
+        
+        # fancier versions of buried unsatified
+        <BuriedUnsatHbonds
+          name="vbuns"
+          use_reporter_behavior="true"
+          report_all_heavy_atom_unsats="true"
+          scorefxn="sfxn"
+          residue_selector="AB_interface"
+          ignore_surface_res="false"
+          print_out_info_to_pdb="true"
+          confidence="0" use_ddG_style="true"
+          dalphaball_sasa="true"
+          probe_radius="1.1"
+          atomic_depth_selection="5.5"
+          burial_cutoff="1000"
+          burial_cutoff_apo="0.2" />
+
+        <BuriedUnsatHbonds
+          name="sbuns"
+          use_reporter_behavior="true"
+          report_all_heavy_atom_unsats="true"
+          scorefxn="sfxn"
+          residue_selector="AB_interface"
+          ignore_surface_res="false"
+          print_out_info_to_pdb="true"
+          confidence="0"
+          use_ddG_style="true"
+          burial_cutoff="0.01"
+          dalphaball_sasa="true"
+          probe_radius="1.1"
+          atomic_depth_selection="5.5"
+          atomic_depth_deeper_than="false" />
+        
+    </FILTERS>
+    <MOVERS>
+
+    </MOVERS>
+    <APPLY_TO_POSE>
+    </APPLY_TO_POSE>
+    <PROTOCOLS>
+        
+        Add mover="target_only"/>
+        
+        
+        <Add filter_name="exposed_np_target" />
+        <Add filter_name="contact_MS" />
+        <Add filter_name="ddg" />
+        <Add filter_name="ddg_norepack" />
+        <Add filter_name="np_target_exposed_approx" />
+        <Add filter_name="interface_contactcount" />
+        <Add filter_name="vbuns" />
+        <Add filter_name="sbuns" />
+        <Add filter_name="interface_buried_sasa" />
+        <Add filter_name="interface_hydrophobic_sasa" />
+        <Add filter_name="interface_polar_sasa" />
+        
+        Add filter_name="contact_patch_glyc" />
+        Add filter_name="contact_patch_interface" />
+        
+        <Add filter_name="contact_patch_sq3" />
+        <Add filter_name="contact_patch_sq5" />
+        <Add filter_name="contact_patch_sq7" />
+        
+        <Add filter_name="contact_molec_sq3" />
+        <Add filter_name="contact_molec_sq5" />
+        <Add filter_name="contact_molec_sq7" />
+    </PROTOCOLS>
+
+</ROSETTASCRIPTS>

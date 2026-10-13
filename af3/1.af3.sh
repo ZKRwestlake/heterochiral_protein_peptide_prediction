@@ -23,3 +23,5 @@ singularity exec \
  --db_dir=/root/public_databases \
  --input_dir=/root/af_input \
  --output_dir=/root/af_output \
+# Run a single sample instead of the whole af_input directory:
+#  --json_path=/root/af_input/2r3c_data.json
