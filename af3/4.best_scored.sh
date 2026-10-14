@@ -1,6 +1,8 @@
 #!/bin/sh
-set -e
+# Source the shell profile before enabling set -e: profiles can contain commands
+# that exit non-zero, which set -e would otherwise treat as fatal.
 . ~/.bashrc
+set -e
 conda activate CHAI_ENV
 export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
